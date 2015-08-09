@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>省市区级联菜单</title>
+</head>
+<body>
+    <select id="province"></select>
+    <select id="city"></select>
+    <select id="district"></select>
+    <script src="require.js"></script>
+    <script>
+    require.config({
+        baseUrl:'../plugins'
+    })
+    require(['cascade'],function(Cascade){
+        var cascade = new Cascade('province','city','district');
+
+        // cascade.select('北京')
+        // cascade.select('北京','朝阳区')
+        cascade.select('北京','朝阳区','三环以内')
+    })
+    </script>
+</body>
+</html>
