@@ -2,12 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
     <title>省市区级联菜单</title>
+    <style>
+        body{
+            margin-top: 100px;
+        }
+    </style>
 </head>
 <body>
-    <select id="province"></select>
-    <select id="city"></select>
-    <select id="district"></select>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <select name="" id="province" class="form-control"></select>
+            </div>
+            <div class="col-md-2">
+                <select name="" id="city" class="form-control"></select>
+            </div>
+            <div class="col-md-2">
+                <select name="" id="district" class="form-control"></select>
+            </div>
+        </div>
+        
+        
+        
+    </div>
     <script src="require.js"></script>
     <script>
     require.config({
