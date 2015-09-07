@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+    <title>dataset</title>
+    <style>
+        body{
+            margin-top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-horizontal" id="person">
+            <div class="form-group">
+                <label>姓名：</label>
+                <input type="text" class="form-control" data-field="name" value="默认名字">
+            </div>
+            <div class="form-group">
+                <label>性别：</label>
+                <select class="form-control" data-field="gender">
+                    <option value="man">男</option>
+                    <option value="women">女</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>简介：</label>
+                <textarea class="form-control" data-field="intro">默认介绍</textarea>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" id="get">获取</button>
+            </div>
+            <div class="form-group">
+                <textarea class="form-control" id="details" placeholder="依次输入姓名、性别(男|女)、简介，用空格分开"></textarea>
+                <br>
+                <button class="btn btn-primary" id="set">设置</button>
+            </div>
+        </div>
+        <pre id="result">
+            
+        </pre>
+    </div>
+    <script src="require.js"></script>
+    <script>
+    require.config({
+        baseUrl:'../plugins'
+    })
+    require(['dataset'],function(dataset){
+        var dataset = new dataset('#person'),
+            oResult = document.getElementById('result'),
+            oBtn = document.getElementById('get'),
+            oSet = document.getElementById('set'),
+            oDetail = document.getElementById('details');
+
+        //获取
+        oBtn.addEventListener('click',function(){
+            oResult.innerHTML = JSON.stringify(dataset.get())
+        },false)
+        //设置
+        oSet.addEventListener('click',function(){
+            var res = {};
+            var keys = Object.keys(dataset.get());
+            var aValue = oDetail.value.split(/[\s\n\t\r]+/);
+            keys.map(function(e,i){
+                res[e] = aValue[i].replace(/(男)|(女)/,function(e,$1,$2){
+                    if($1){
+                        return 'man';
+                    }else if($2){
+                        return 'women';
+                    }else{
+                        return e;
+                    }
+                }) ;
+                return e;
+            })
+            // dataset.set(res);
+            oBtn.click()
+        },false)
+        //设置单个值
+        //console.log(dataset.set('name','王健'))
+        //获取单个值
+        //console.log(data.get('name'))
+        // oResult.innerHTML = JSON.stringify(dataset.get())
+
+    })
+    </script>
+</body>
+</html>
