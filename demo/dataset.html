@@ -33,7 +33,7 @@
                 <button class="btn btn-primary" id="get">获取</button>
             </div>
             <div class="form-group">
-                <textarea class="form-control" id="details" placeholder="依次输入姓名、性别(男|女)、简介，用空格分开"></textarea>
+                <textarea class="form-control" id="details" placeholder="依次输入姓名、性别(男|女)、简介，用空格分开">高雯 女 美女</textarea>
                 <br>
                 <button class="btn btn-primary" id="set">设置</button>
             </div>
@@ -62,9 +62,12 @@
         oSet.addEventListener('click',function(){
             var res = {};
             var keys = Object.keys(dataset.get());
+            if(!oDetail.value.trim()){
+                return oDetail.focus();
+            }
             var aValue = oDetail.value.split(/[\s\n\t\r]+/);
             keys.map(function(e,i){
-                res[e] = aValue[i].replace(/(男)|(女)/,function(e,$1,$2){
+                res[e] = aValue[i].replace(/^(男)|^(女)/,function(e,$1,$2){
                     if($1){
                         return 'man';
                     }else if($2){
@@ -75,7 +78,7 @@
                 }) ;
                 return e;
             })
-            // dataset.set(res);
+            dataset.set(res);
             oBtn.click()
         },false)
         //设置单个值
