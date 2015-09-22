@@ -16,18 +16,18 @@
         <div class="form-horizontal" id="person">
             <div class="form-group">
                 <label>姓名：</label>
-                <input type="text" class="form-control" data-field="name" value="默认名字">
+                <input type="text" class="form-control" data-prop="name" value="默认名字">
             </div>
             <div class="form-group">
                 <label>性别：</label>
-                <select class="form-control" data-field="gender">
+                <select class="form-control" data-prop="gender">
                     <option value="man">男</option>
                     <option value="women">女</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>简介：</label>
-                <textarea class="form-control" data-field="intro">默认介绍</textarea>
+                <textarea class="form-control" data-prop="intro">默认介绍</textarea>
             </div>
             <div class="form-group">
                 <button class="btn btn-primary" id="get">获取</button>
@@ -48,12 +48,13 @@
         baseUrl:'../plugins'
     })
     require(['dataset'],function(dataset){
-        var dataset = new dataset('#person'),
+        var dataset = new dataset('#person','data-prop'),
             oResult = document.getElementById('result'),
             oBtn = document.getElementById('get'),
             oSet = document.getElementById('set'),
             oDetail = document.getElementById('details');
 
+        // console.log(dataset);
         //获取
         oBtn.addEventListener('click',function(){
             oResult.innerHTML = JSON.stringify(dataset.get())
@@ -82,9 +83,15 @@
             oBtn.click()
         },false)
         //设置单个值
-        //console.log(dataset.set('name','王健'))
+        // console.log(dataset.set('name','王健'))
         //获取单个值
-        //console.log(data.get('name'))
+        // console.log(dataset.get('name'))
+        //清空除gender之外的所有属性
+        // dataset.clear('gender')
+        //清空除gender,name之外的所有属性
+        // dataset.clear(['gender','name'])
+        //获取单个元素
+        // console.log(dataset.el('name'))
         // oResult.innerHTML = JSON.stringify(dataset.get())
 
     })
