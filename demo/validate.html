@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+    <title>validate</title>
+    <style>
+        body{
+            margin-top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-horizontal" id="userinfo">
+            <div class="form-group">
+                <label for="">姓名</label>
+                <input type="text" class="form-control" data-field="username">
+            </div>
+            <div class="form-group">
+                <label for="">年龄</label>
+                <input type="text" class="form-control" data-field="age">
+            </div>
+            <div class="form-group">
+                <label for="">密码</label>
+                <input type="password" class="form-control" data-field="password">
+            </div>
+            <div class="form-group">
+                <label for="">确认密码</label>
+                <input type="password" class="form-control" data-field="rpassword">
+            </div>
+            <div class="form-group">
+                <label for="">邮箱</label>
+                <input type="text" class="form-control" data-field="email">
+            </div>
+            <div class="form-group">
+                <label for="">手机号码</label>
+                <input type="text" class="form-control" data-field="phone">
+            </div>
+            <div class="form-group"><button class="btn btn-primary" id="confirm">提交</button></div>
+        </div>
+    </div>
+    <script src="require.js"></script>
+    <script>
+    require.config({
+        baseUrl:'../plugins'
+    })
+    require(['validate','dataset'],function(validate,dataset){
+        var dUserinfo = new dataset('#userinfo');
+
+        document.getElementById('confirm').addEventListener('click',function(){
+            //使用dataset获取数据
+            var data  = dUserinfo.get();
+            //验证数据
+            var valid = new validate({
+                data:data,
+                //字段名的中文映射
+                alias:{
+                    username:'用户名',
+                    age:'年龄',
+                    password:'密码',
+                    rpassword:'确认密码',
+                    email:'邮箱',
+                    phone:'电话'
+                },
+                //限制字段非空
+                notEmpty:{
+                    fields:['username','age','password','rpassword','email','phone'],
+                    info:'{field}不能为空'
+                },
+                //限制字段字符长度
+                lenLim:{
+                    fields:['username',{fields:['password'],min:10,max:15}],
+                    info:'{field}长度需要在{min}-{max}位字符之间',
+                    min:5,
+                    max:10
+                },
+                //验证字段是否符合某种正则，内置phone|email,可以自定义reg
+                pattern:[
+                    {
+                        fields:['email'],
+                        type:'email'
+                    },
+                    {
+                        fields:['phone'],
+                        reg:/^0?(13|14|15|17|18)[0-9]{9}$/
+                    }
+                ],
+                //其他验证
+                individuation:[
+                    {
+                        fields:['password','rpassword'],
+                        info:'两次密码输入不一致',
+                        handle:function(password,rpassword){
+                            if(password != rpassword){
+                                return false;
+                            }else{
+                                return true
+                            }
+                        }
+                    }
+                ]
+            })
+            if(!valid.valid){
+                if(typeof valid.field.length == 'undefined'){
+                    dUserinfo.el(valid.field).focus()
+                }
+                return alert(valid.msg)
+            }else{
+                console.log(data)
+            }
+        },false)
+    })
+    </script>
+</body>
+</html>
