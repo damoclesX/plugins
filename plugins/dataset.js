@@ -43,7 +43,7 @@ define(function(){
     //设置html元素的值
     DataSet.prototype.set = function(key,value){
         //设置单个值
-        if(arguments.length == 2){
+        if(arguments.length == 2 && key in this.cache){
             set_value(this.cache[key],value||'');
         //设置多个值
         }else{
@@ -105,6 +105,20 @@ define(function(){
         var tagName = ele.tagName.toLowerCase();
         switch(tagName){
             case 'select':
+                var origin = [].slice.call(ele.options).map(function(e){
+                    return e.value;
+                });
+                if(value.trim() != '' && origin.indexOf(value) == -1 ){
+                    var option = new Option;
+                    option.value = value;
+                    option.text = value;
+
+                    ele.add(option);
+                    ele.value = value;
+                }else{
+                    ele.value = origin[0];
+                };
+                break;
             case 'textarea':
             case 'input':
                 ele.value = value;
