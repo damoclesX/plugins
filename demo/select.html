@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+    <title>select</title>
+    <style>
+        body{
+            margin-top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-horizontal" id="userinfo">
+            <select class="form-control" id="select">
+                <option value="1">选项1</option>
+                <option value="2">选项2</option>
+                <option value="3">选项3</option>
+                <option value="4">选项4</option>
+                <option value="5">选项5</option>
+                <option value="6">选项6</option>
+            </select>
+        </div>
+    </div>
+    <script src="require.js"></script>
+    <script>
+    require.config({
+        baseUrl:'../plugins'
+    })
+    require(['select'],function(Select){
+        var selectExt = new Select('#select');
+    })
+    </script>
+</body>
+</html>
