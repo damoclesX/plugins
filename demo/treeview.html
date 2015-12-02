@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+    <title>省市区级联菜单</title>
+    <style>
+        body{
+            margin-top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="tree">
+        
+    </div>
+    <script src="require.js"></script>
+    <script>
+    require.config({
+        baseUrl:'../plugins'
+    })
+    require(['tree'],function(Tree){
+        var data  = [];
+        for (var i = 1; i < 10; i++) {
+            if(i%2 == 0){
+                data.push({
+                    title:'一级菜单'+i,
+                    children:[
+                        {title:'二级菜单'}
+                    ]
+                })
+            }else if(i%3 == 0){
+                data.push({
+                    title:'一级菜单'+i,
+                    children:[
+                        {title:'二级菜单1'},
+                        {
+                            title:'二级菜单2',
+                            children:[
+                                {
+                                    title:'三级菜单一'
+                                },{
+                                    title:'三级菜单二'
+                                }
+                            ]
+                        }
+                    ]
+                })
+            }else{
+                data.push({
+                    title:'一级菜单'+i
+                })
+            }
+        };
+
+        new Tree({
+            el: '#tree',
+            className: 'nav',
+            data: data,
+            defaultLevel: 1,
+            childNode: {
+                supper: function(obj, level){
+                    var oLi = document.createElement('li');
+                    oLi.innerHTML = JSON.stringify(obj);
+                    return oLi;
+                }
+            }
+        })
+    })
+    </script>
+</body>
+</html>
