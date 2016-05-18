@@ -1,5 +1,4 @@
 define(function(){
-    var jsonpcallbackuid = 0;
     var utils = {
         ajax: function (param){
             param = param || {};
@@ -38,49 +37,52 @@ define(function(){
                 return res.join('&');
             }
         },
-        jsonp: function(param){
-            param = param || {};
-            if(!param.url) return;
-            var data = param.data || {};
-            var hasData = !!Object.keys(data).length;
-            param.handle = typeof param.success == 'function' ? param.success : function(){};
-            param.error = typeof param.error == 'function' ? param.error : function(){};
-            var id = _createTmp(param.handle);
-            _createScript(param.url, data, id, param.error, param.handle);
-            function _createScript(url, data, tmp, errorHandle){
-                var oScript = document.createElement('script');
-                oScript.type = 'text/javascript';
-                data.jsoncallback = id;
-                oScript.src = url +'?'+ obj2url(data);
-                document.head.appendChild(oScript);
+        jsonp: (function(){
+            var jsonpcallbackuid = 0;
+            return function(param){
+                param = param || {};
+                if(!param.url) return;
+                var data = param.data || {};
+                var hasData = !!Object.keys(data).length;
+                param.handle = typeof param.success == 'function' ? param.success : function(){};
+                param.error = typeof param.error == 'function' ? param.error : function(){};
+                var id = _createTmp(param.handle);
+                _createScript(param.url, data, id, param.error, param.handle);
+                function _createScript(url, data, tmp, errorHandle){
+                    var oScript = document.createElement('script');
+                    oScript.type = 'text/javascript';
+                    data.jsoncallback = id;
+                    oScript.src = url +'?'+ obj2url(data);
+                    document.head.appendChild(oScript);
 
-                oScript.onload = function(){
-                    delete window[id];
-                };
-                oScript.onerror = function(ev){
-                    errorHandle && errorHandle(ev);
-                };
-                return oScript;
-            }
-            function obj2url(obj){
-                var res = [];
-                for(var i in obj){
-                    res.push(i+'='+obj[i]);
+                    oScript.onload = function(){
+                        delete window[id];
+                    };
+                    oScript.onerror = function(ev){
+                        errorHandle && errorHandle(ev);
+                    };
+                    return oScript;
                 }
-                return res.join('&');
-            }
-            function _createTmp(handle){
-                var id = 'jsonpcallback'+(++jsonpcallbackuid);
-                win[id] = function(res){
-                    if(/^\{(?:.*)\}$/.test(res)){
-                        handle && handle(JSON.parse(res))
-                    }else{
-                        handle && handle(res)
+                function obj2url(obj){
+                    var res = [];
+                    for(var i in obj){
+                        res.push(i+'='+obj[i]);
                     }
-                };
-                return id;;
+                    return res.join('&');
+                }
+                function _createTmp(handle){
+                    var id = 'jsonpcallback'+(++jsonpcallbackuid);
+                    win[id] = function(res){
+                        if(/^\{(?:.*)\}$/.test(res)){
+                            handle && handle(JSON.parse(res))
+                        }else{
+                            handle && handle(res)
+                        }
+                    };
+                    return id;;
+                }
             }
-        },
+        })(),
         cache: (function(win){
             function Version(){
 
@@ -202,7 +204,130 @@ define(function(){
                 this.addCookie(key, '', -1)
             };
             return new Cache;
-        })(window)
+        })(window),
+        deviceready: function (callback, options){
+            options = options || {};
+            var emptyFn = function(){};
+            var bridge = {
+                origin: null,
+                native: true,
+                on: emptyFn,
+                trigger: emptyFn,
+                init: emptyFn,
+                call: emptyFn,
+                platform: 'pc',
+                androidFn: {},
+                placeholder: null,
+                info: function(){
+                    var args = Array.prototype.slice.call(arguments);
+                    var tpl = args.map(function(e){
+                        switch(typeof e)                        {
+                            case 'number':
+                            case 'string':
+                            case 'boolean':
+                                return ''+e;
+                            case 'function':
+                                return ''+e.toString();
+                            case 'object':
+                                if(Array.isArray(e)){
+                                    return e.join(',')
+                                }else{
+                                    return JSON.stringify(e);
+                                }
+                            default:
+                                return e.toString
+                        }
+                    }).join('---');
+                    if(bridge.placeholder){
+                        bridge.placeholder.innerHTML = tpl;
+                    }else{
+                        var id = 'bridge'+Math.random().toString().substring(2);
+
+                        var tmp = document.createElement('div');
+                        tmp.style.cssText = 'text-align:center;color:#ff2424;background-color:#fff;';
+                        tmp.id = id;
+                        tmp.innerHTML = tpl;
+                        document.body.insertBefore(tmp, document.body.children[0]);
+                        bridge.placeholder = tmp;
+                    }
+                },
+                debug: typeof options.debug == 'boolean' ? options.debug : false
+            };
+            //ios
+            if(window.WebViewJavascriptBridge){
+                _handleIOS(window.WebViewJavascriptBridge, callback)
+            //android
+            }else if(window.TinmanBridgeAndroid){
+                _handleANDRIOD(window.TinmanBridgeAndroid, callback)
+            }else{
+                //ios
+                document.addEventListener('WebViewJavascriptBridgeReady',function(){
+                    _handleIOS(window.WebViewJavascriptBridge, callback)
+                },false);
+
+                //pc
+                if(bridge.debug || !/iphone|ipad|ipod|android/.test(navigator.userAgent.toLowerCase())){
+                    document.addEventListener('DOMContentLoaded',function(){
+                        _handlePC(bridge, callback)
+                    },false);
+                }
+            }
+            function _handleIOS(_bridge, callback){
+                bridge.origin = _bridge;
+                bridge.platform = 'ios';
+                bridge.init = function(handler){
+                    bridge.origin.init(handler)
+                };
+                bridge.on = function(name, handler){
+                    bridge.origin.registerHandler(name, handler);
+                };
+                bridge.trigger = function(name, data, callback){
+                    if(data){
+                        data = typeof data == 'string' ? data : JSON.stringify(data)
+                    }
+                    console.log(name, data);
+                    bridge.origin.callHandler(name, data, callback);
+                };
+                callback.call(bridge, bridge)
+            }
+            function _handleANDRIOD(_bridge, callback){
+                bridge.origin = _bridge;
+                bridge.platform = 'android';
+                bridge.androidFn = {};
+                bridge.call = function(name, data){
+                    if(name in bridge.androidFn){
+                        bridge.androidFn[name].forEach(function(e){
+                            if(typeof e == 'function') e(data);
+                        })
+                    }
+                };
+                bridge.on = function(name, handler){
+                    if(!(name in bridge.androidFn)){
+                        bridge.androidFn[name] = [];
+                    }
+                    bridge.androidFn[name].push(handler);
+                };
+                bridge.trigger = function(name, data){
+                    if(bridge.debug){
+                        bridge.info(name, data)
+                    }
+                    if(data){
+                        data = typeof data == 'string' ? data : JSON.stringify(data);
+                        bridge.origin[name] && bridge.origin[name](data)
+                    }else{
+                        bridge.origin[name] && bridge.origin[name]()
+                    };
+                };
+                callback.call(bridge, bridge);
+            }
+            function _handlePC(){
+                bridge.native = false;
+                bridge.trigger = function(){
+                    
+                };
+                callback.call(bridge, bridge)
+            }
+        }
     };
     return utils;
 })
