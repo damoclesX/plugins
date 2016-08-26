@@ -10,12 +10,14 @@ define(function(){
             }else{
                 xhr = new ActiveXObject("Microsoft.XMLHTTP")
             }
-            xhr.open(param.type, param.url, true);
+            
             if(param.type == 'POST'){
+                xhr.open(param.type, param.url, true);
                 xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
                 param.data = obj2url(param.data)
             }else if(param.type == 'GET'){
-                param.url += obj2url(param.data)
+                param.url += '?'+obj2url(param.data)
+                xhr.open(param.type, param.url, true);
                 param.data = null
             }
 
@@ -205,7 +207,10 @@ define(function(){
             };
             return new Cache;
         })(window),
-        deviceready: function (callback, options){
+        deviceready: function(callback, options){
+            if(window.tinmanBridge){
+                return callback.call(window.tinmanBridge, window.tinmanBridge);
+            }
             options = options || {};
             var emptyFn = function(){};
             var bridge = {
@@ -221,7 +226,8 @@ define(function(){
                 info: function(){
                     var args = Array.prototype.slice.call(arguments);
                     var tpl = args.map(function(e){
-                        switch(typeof e)                        {
+                        if(e == null) return '';
+                        switch(typeof e){
                             case 'number':
                             case 'string':
                             case 'boolean':
@@ -238,6 +244,7 @@ define(function(){
                                 return e.toString
                         }
                     }).join('---');
+                    console.log(tpl);
                     if(bridge.placeholder){
                         bridge.placeholder.innerHTML = tpl;
                     }else{
@@ -251,7 +258,13 @@ define(function(){
                         bridge.placeholder = tmp;
                     }
                 },
-                debug: typeof options.debug == 'boolean' ? options.debug : false
+                debug: typeof options.debug == 'boolean' ? options.debug : false,
+                output: options.output || {
+                    trigger: false,
+                    call: false,
+                    on: false,
+                    init: false
+                }
             };
             //ios
             if(window.WebViewJavascriptBridge){
@@ -264,9 +277,8 @@ define(function(){
                 document.addEventListener('WebViewJavascriptBridgeReady',function(){
                     _handleIOS(window.WebViewJavascriptBridge, callback)
                 },false);
-
                 //pc
-                if(bridge.debug || !/iphone|ipad|ipod|android/.test(navigator.userAgent.toLowerCase())){
+                if(bridge.debug){
                     document.addEventListener('DOMContentLoaded',function(){
                         _handlePC(bridge, callback)
                     },false);
@@ -276,16 +288,24 @@ define(function(){
                 bridge.origin = _bridge;
                 bridge.platform = 'ios';
                 bridge.init = function(handler){
+                    if(bridge.debug && bridge.output.init){
+                        bridge.info('init: ');
+                    }
                     bridge.origin.init(handler)
                 };
                 bridge.on = function(name, handler){
+                    if(bridge.debug && bridge.output.on){
+                        bridge.info('on: '+name+'\n'+handler);
+                    }
                     bridge.origin.registerHandler(name, handler);
                 };
                 bridge.trigger = function(name, data, callback){
+                    if(bridge.debug && bridge.output.trigger){
+                        bridge.info('on: '+name+'\n'+data);
+                    }
                     if(data){
                         data = typeof data == 'string' ? data : JSON.stringify(data)
                     }
-                    console.log(name, data);
                     bridge.origin.callHandler(name, data, callback);
                 };
                 callback.call(bridge, bridge)
@@ -295,6 +315,9 @@ define(function(){
                 bridge.platform = 'android';
                 bridge.androidFn = {};
                 bridge.call = function(name, data){
+                    if(bridge.debug && bridge.output.call){
+                        bridge.info(name, data)
+                    }
                     if(name in bridge.androidFn){
                         bridge.androidFn[name].forEach(function(e){
                             if(typeof e == 'function') e(data);
@@ -302,16 +325,19 @@ define(function(){
                     }
                 };
                 bridge.on = function(name, handler){
+                    if(bridge.debug && bridge.output.on){
+                        bridge.info(name, handler)
+                    }
                     if(!(name in bridge.androidFn)){
                         bridge.androidFn[name] = [];
                     }
                     bridge.androidFn[name].push(handler);
                 };
                 bridge.trigger = function(name, data){
-                    if(bridge.debug){
+                    if(bridge.debug && bridge.output.trigger){
                         bridge.info(name, data)
                     }
-                    if(data){
+                    if(data != null){
                         data = typeof data == 'string' ? data : JSON.stringify(data);
                         bridge.origin[name] && bridge.origin[name](data)
                     }else{
@@ -322,11 +348,28 @@ define(function(){
             }
             function _handlePC(){
                 bridge.native = false;
-                bridge.trigger = function(){
-                    
+                bridge.debugFn = {};
+                bridge.trigger = function(name, data){
+                    if(bridge.debug && bridge.output.trigger){
+                        bridge.info(name, data)
+                    }
                 };
-                callback.call(bridge, bridge)
+                bridge.on = function(name, handler){
+                    if(!(name in bridge.debugFn)){
+                        bridge.debugFn[name] = [];
+                    }
+                    bridge.debugFn[name].push(handler);
+                };
+                bridge.call = function(name, data){
+                    if(name in bridge.debugFn){
+                        bridge.debugFn[name].forEach(function(e){
+                            if(typeof e == 'function') e(data);
+                        })
+                    }
+                };
+                callback.call(bridge, bridge);
             }
+            window.tinmanBridge = bridge;
         }
     };
     return utils;
